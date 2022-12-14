@@ -269,11 +269,25 @@ public:
         f2 = f;
         Check();
     }
+    void FiveStep(){
+        std::cout << "Шаг 5\n";
+        std::cout << "==============================\n";
+        for (auto i = k + 3; i < n; ++i){
+            SubLineEffUpToDown(i);
+            SubLineDirect(i - 1, i, -matrix2[i][ReverseIndex(i - 1)]);
+        }
+        for (int i = k - 1; i>= 0; --i){
+            SubLineEffDownToUp(i);
+            SubLineDirect(i + 1, i, -matrix2[i][ReverseIndex(i + 1)]);
+        }
+        PrintAll();
+    }
     void Solve(){
         FirstStep();
         SecondStep();
         ThirstStep();
         FourthStep();
+        FiveStep();
     }
 };
 
