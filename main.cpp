@@ -197,18 +197,23 @@ class Solution{
     }
     static void NormalizeLineCore(vector_RefRational2d& matrix3of3, vector_RefRational& f3, int index){
         int reverse_index = ReverseIndex(index, 3);
-        for (int i = reverse_index; i >= 0; i--){
+        for (int i = reverse_index - 1; i >= 0; i--){
             *matrix3of3[index][i] /= *matrix3of3[index][reverse_index];
         }
         *f3[index] /= *matrix3of3[index][reverse_index];
         *matrix3of3[index][reverse_index] = 1;
     }
-    static void SubLineCore(vector_RefRational2d& matrix3of3, vector_RefRational& f3, int from, int to){
+    static void SubLineCoreRight(vector_RefRational2d& matrix3of3, vector_RefRational& f3, int from, int to){
         int reverse_index = ReverseIndex(from, 3);
         for (int j = reverse_index - 1; j >= 0; j--){
-            *matrix3of3[from][j] -= *matrix3of3[to][reverse_index] * *matrix3of3[from][j];
+            *matrix3of3[to][j] -=  *matrix3of3[from][j] * *matrix3of3[to][reverse_index];
         }
-        matrix3of3[from][reverse_index] = 0;
+        *f3[to] -= *f3[from] * *matrix3of3[to][reverse_index];
+        *matrix3of3[to][reverse_index] = 0;
+    }
+    static void SubLineCoreLeft(vector_RefRational2d& matrix3of3, vector_RefRational& f3, int from, int to){
+        *f3[to] -= *f3[from] * *matrix3of3[to][ReverseIndex(from, 3)];
+        *matrix3of3[to][ReverseIndex(from, 3)] = 0;
     }
     void FourthStep(){
         std::cout << "Шаг 4\n";
@@ -227,10 +232,17 @@ class Solution{
             NormalizeLineCore(matrix3of3, f3, i);
             NormalizeLineDirect(k + i, matrix2[k + i][ReverseIndex(k+i)]);
             for (int j = i + 1; j < 3; j++){
-                SubLineCore(matrix3of3, f3, i, j);
-                SubLineDirect(k + i, k + j, matrix2[k+j][k + i]);
+                SubLineCoreRight(matrix3of3, f3, i, j);
+                SubLineDirect(k + i, k + j, -matrix2[k+j][ReverseIndex(k + i)]);
             }
         }
+        for (int i = 2; i >= 1; i--){
+            for (int j = i - 1; j >= 0; j--){
+                SubLineCoreLeft(matrix3of3, f3, i, j);
+                SubLineDirect(k+i, k+j,-matrix2[k+j][ReverseIndex(k+i)]);
+            }
+        }
+        PrintAll();
     }
 public:
     Solution(vector_Rational2d &matrix, vector_Rational &f, size_t k) : matrix(matrix), f(f), k(k) {
