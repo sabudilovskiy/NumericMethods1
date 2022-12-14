@@ -9,5 +9,5 @@ include(libraries/conan_paths.cmake)
 
 find_package(Boost REQUIRED)
 
-add_executable(NumericMethods1 main.cpp)
+add_executable(NumericMethods1 main.cpp Resolver.h Utils.h Utils.cpp Resolver.cpp)
 target_link_libraries(${PROJECT_NAME} Boost::headers)
