@@ -14,6 +14,22 @@ using vector_RefRational = std::vector<Rational*>;
 using vector_RefRational2d = std::vector<std::vector<Rational*>>;
 
 
+void Print(vector_Rational2d& matrix, std::vector<Rational>& f){
+    auto it = f.begin();
+    for (auto& line : matrix){
+        for (auto row: line) {
+            if (row.denominator() == 1) std::cout << row.numerator() << ' ';
+            else std::cout << row << ' ';
+        }
+        std::cout << '|';
+        if (it->denominator() == 1) std::cout << it->numerator();
+        else std::cout << *it;
+        std::cout << '\n';
+        ++it;
+    }
+    std::cout << '\n';
+}
+
 
 class Solution{
     vector_RefRational a;
@@ -27,28 +43,13 @@ class Solution{
     vector_Rational f2;
     size_t n;
     size_t k;
-    void print(vector_Rational2d& matrix, std::vector<Rational>& f){
-        auto it = f.begin();
-        for (auto& line : matrix){
-            for (auto row: line) {
-                if (row.denominator() == 1) std::cout << row.numerator() << ' ';
-                else std::cout << row << ' ';
-            }
-            std::cout << '|';
-            if (it->denominator() == 1) std::cout << it->numerator();
-            else std::cout << *it;
-            std::cout << '\n';
-            ++it;
-        }
-        std::cout << '\n';
-    }
-    void print_all(){
+    void PrintAll(){
         std::cout << "First matrix\n";
-        print(matrix, f);
+        Print(matrix, f);
         std::cout << "Second matrix\n";
-        print(matrix2, f2);
+        Print(matrix2, f2);
     }
-    bool have_missmatches(){
+    bool HaveMissmatches(){
         auto n = matrix.size();
         bool have_missmatch = false;
         for (int i = 0; i < n; i++){
@@ -65,115 +66,120 @@ class Solution{
         }
         return have_missmatch;
     }
-    void print_and_check(){
-        if (have_missmatches()) print_all();
+    void Check(){
+        if (HaveMissmatches()) PrintAll();
     }
-    void sub_line_direct(size_t from, size_t to, Rational k){
+    void SubLineDirect(size_t from, size_t to, Rational k){
         for (int i = 0; i < matrix2.size(); ++i){
             matrix2[to][i] += k * matrix2[from][i];
         }
         f2[to] += f2[from] * k;
-        print_and_check();
+        Check();
     }
-    void sub_line_eff_up_to_down(size_t i){
+    void SubLineEffUpToDown(size_t i){
         *b[i] -= *a[i-1] * *c[i-1];
         f[i] -= f[i-1] * *c[i-1];
         *c[i-1] = 0;
     }
-    void sub_line_eff_up_to_line_p(size_t i){
+    void SubLineEffUpToLineP(size_t i){
         *p[i] -= *a[i - 1] * *p[i - 1];
         f[k] -= f[i-1] * *p[i - 1];
         *p[i - 1] = 0;
     }
 
-    void sub_line_eff_up_to_line_q(size_t i){
-        *p[i] -= *a[i - 1] * *q[i - 1];
+    void SubLineEffUpToLineQ(size_t i){
+        *q[i] -= *a[i - 1] * *q[i - 1];
         f[k+2] -= f[i-1] * *q[i - 1];
         *q[i - 1] = 0;
     }
 
-    void sub_line_eff_down_to_up(size_t i){
+    void SubLineEffDownToUp(size_t i){
         *b[i] -= *c[i] * *a[i];
         f[i] -= f[i + 1] * *a[i];
         *a[i] = 0;
     }
 
-    void sub_line_eff_down_to_p(size_t i){
+    void SubLineEffDownToP(size_t i){
         *p[i] -= *c[i] * *p[i + 1];
         f[k] -= f[i + 1] * *p[i + 1];
         *p[i + 1] = 0;
     }
-    void sub_line_eff_down_to_q(size_t i){
+    void SubLineEffDownToQ(size_t i){
         *q[i] -= *c[i] * *q[i + 1];
         f[k + 2] -= f[i + 1] * *q[i + 1];
         *q[i + 1] = 0;
     }
 
-    void normalize_line_direct(size_t index, Rational k){
+    void NormalizeLineDirect(size_t index, Rational k){
         for (int i = 0; i < matrix2.size(); ++i){
             matrix2[index][i] /= k;
         }
         f2[index] /= k;
-        print_and_check();
+        Check();
     }
-    void normalize_line_eff_up_to_down(size_t i){
+    void NormalizeLineEffUpToDown(size_t i){
         *a[i] /= *b[i];
         f[i] /= *b[i];
         *b[i] = 1;
     }
-    void normalize_line_eff_down_to_up(size_t i){
+    void NormalizeLineEffDownToUp(size_t i){
         f[i] /= *b[i];
         *c[i - 1] /= *b[i];
         *b[i] = 1;
     }
-    void first_step(){
+    void FirstStep(){
         //делаем единичку на побочной диагонали в первой строке
         std::cout << "Шаг 1\n";
         std::cout << "==============================\n";
-        normalize_line_eff_up_to_down(0);
-        normalize_line_direct(0, matrix2[0][n - 1]);
+        NormalizeLineEffUpToDown(0);
+        NormalizeLineDirect(0, matrix2[0][n - 1]);
         for (auto i = 1; i < k; ++i){
             //зануляем i столбец в строке под текущей
-            sub_line_eff_up_to_down(i);
-            sub_line_direct(i - 1, i, -matrix2[i][n - i]);
+            SubLineEffUpToDown(i);
+            SubLineDirect(i - 1, i, -matrix2[i][n - i]);
             //нормируем строку
-            normalize_line_eff_up_to_down(i);
-            normalize_line_direct(i, matrix2[i][n - i - 1]);
+            NormalizeLineEffUpToDown(i);
+            NormalizeLineDirect(i, matrix2[i][n - i - 1]);
             //зануляем i столбец в p
-            sub_line_eff_up_to_line_p(i);
-            sub_line_direct(i - 1, k, -matrix2[k][n - i]);
+            SubLineEffUpToLineP(i);
+            SubLineDirect(i - 1, k, -matrix2[k][n - i]);
             //зануляем i столбец в q
-            sub_line_eff_up_to_line_q(i);
-            sub_line_direct(i - 1, k + 2, -matrix2[k + 2][n - i]);
+            SubLineEffUpToLineQ(i);
+            SubLineDirect(i - 1, k + 2, -matrix2[k + 2][n - i]);
         }
     }
-    void second_step(){
+    void SecondStep(){
         std::cout << "Шаг 2\n";
         std::cout << "==============================\n";
-        normalize_line_eff_down_to_up(n - 1);
-        normalize_line_direct(n - 1, matrix2[n - 1][0]);
+        NormalizeLineEffDownToUp(n - 1);
+        NormalizeLineDirect(n - 1, matrix2[n - 1][0]);
         //идём до q
         for (auto i = n - 2; i > k + 2; --i){
-            sub_line_eff_down_to_up(i);
-            sub_line_direct(i + 1, i, -matrix2[i][n - i - 2]);
+            SubLineEffDownToUp(i);
+            SubLineDirect(i + 1, i, -matrix2[i][n - i - 2]);
             //зануляем i столбец в p
             if (i != k + 2){
                 //нормируем строку
-                normalize_line_eff_down_to_up(i);
-                normalize_line_direct(i, matrix2[i][n - i - 1]);
-                sub_line_eff_down_to_p(i);
-                sub_line_direct(i + 1, k, -matrix2[k][n - i - 2]);
+                NormalizeLineEffDownToUp(i);
+                NormalizeLineDirect(i, matrix2[i][n - i - 1]);
+                SubLineEffDownToP(i);
+                SubLineDirect(i + 1, k, -matrix2[k][n - i - 2]);
                 //зануляем i столбец в q
-                sub_line_eff_down_to_q(i);
-                sub_line_direct(i + 1, k + 2, -matrix2[k + 2][n - i - 2]);
+                SubLineEffDownToQ(i);
+                SubLineDirect(i + 1, k + 2, -matrix2[k + 2][n - i - 2]);
             }
         }
     }
-    void thirst_step(){
+    void ThirstStep(){
         std::cout << "Шаг 3\n";
         std::cout << "==============================\n";
+        PrintAll();
+        SubLineEffDownToP(k+3);
+        SubLineDirect(k+3, k, -matrix2[k][k+3]);
+//        SubLineDirect(k+3, k+2, -matrix2[k+2][k+3]);
+//        SubLineEffDownToQ(k+3);
     }
-    void fourth_step(){
+    void FourthStep(){
         std::cout << "Шаг 4\n";
         std::cout << "==============================\n";
         vector_RefRational2d matrix3of3 = {
@@ -211,13 +217,13 @@ public:
         }
         matrix2 = matrix;
         f2 = f;
-        print_and_check();
+        Check();
     }
     void Solve(){
-        first_step();
-        second_step();
-        thirst_step();
-        fourth_step();
+        FirstStep();
+        SecondStep();
+        ThirstStep();
+        FourthStep();
     }
 };
 
