@@ -31,6 +31,7 @@ void Print(vector_Rational2d& matrix, std::vector<Rational>& f){
 }
 
 
+
 class Solution{
     vector_RefRational a;
     vector_RefRational b;
@@ -48,6 +49,7 @@ class Solution{
         Print(matrix, f);
         std::cout << "Second matrix\n";
         Print(matrix2, f2);
+        std::cout << "==============================\n";
     }
     bool HaveMissmatches(){
         auto n = matrix.size();
@@ -69,6 +71,12 @@ class Solution{
     void Check(){
         if (HaveMissmatches()) PrintAll();
     }
+    size_t ReverseIndex(size_t i){
+        return n - 1 - i;
+    }
+    static size_t ReverseIndex(size_t i, size_t n){
+        return n - 1 - i;
+    }
     void SubLineDirect(size_t from, size_t to, Rational k){
         for (int i = 0; i < matrix2.size(); ++i){
             matrix2[to][i] += k * matrix2[from][i];
@@ -81,16 +89,16 @@ class Solution{
         f[i] -= f[i-1] * *c[i-1];
         *c[i-1] = 0;
     }
-    void SubLineEffUpToLineP(size_t i){
-        *p[i] -= *a[i - 1] * *p[i - 1];
-        f[k] -= f[i-1] * *p[i - 1];
-        *p[i - 1] = 0;
+    void SubLineEffUpToP(size_t index){
+        *p[index + 1] -= *a[index] * *p[index];
+        f[k] -= f[index] * *p[index];
+        *p[index] = 0;
     }
 
-    void SubLineEffUpToLineQ(size_t i){
-        *q[i] -= *a[i - 1] * *q[i - 1];
-        f[k+2] -= f[i-1] * *q[i - 1];
-        *q[i - 1] = 0;
+    void SubLineEffUpToQ(size_t index){
+        *q[index + 1] -= *a[index] * *q[index];
+        f[k+2] -= f[index] * *q[index];
+        *q[index] = 0;
     }
 
     void SubLineEffDownToUp(size_t i){
@@ -99,15 +107,15 @@ class Solution{
         *a[i] = 0;
     }
 
-    void SubLineEffDownToP(size_t i){
-        *p[i] -= *c[i] * *p[i + 1];
-        f[k] -= f[i + 1] * *p[i + 1];
-        *p[i + 1] = 0;
+    void SubLineEffDownToP(size_t index){
+        *p[index - 1] -= *c[index - 1] * *p[index];
+        f[k] -= f[index] * *p[index];
+        *p[index] = 0;
     }
-    void SubLineEffDownToQ(size_t i){
-        *q[i] -= *c[i] * *q[i + 1];
-        f[k + 2] -= f[i + 1] * *q[i + 1];
-        *q[i + 1] = 0;
+    void SubLineEffDownToQ(size_t index){
+        *q[index - 1] -= *c[index - 1] * *q[index];
+        f[k + 2] -= f[index] * *q[index];
+        *q[index] = 0;
     }
 
     void NormalizeLineDirect(size_t index, Rational k){
@@ -141,12 +149,13 @@ class Solution{
             NormalizeLineEffUpToDown(i);
             NormalizeLineDirect(i, matrix2[i][n - i - 1]);
             //зануляем i столбец в p
-            SubLineEffUpToLineP(i);
+            SubLineEffUpToP(i - 1);
             SubLineDirect(i - 1, k, -matrix2[k][n - i]);
             //зануляем i столбец в q
-            SubLineEffUpToLineQ(i);
+            SubLineEffUpToQ(i - 1);
             SubLineDirect(i - 1, k + 2, -matrix2[k + 2][n - i]);
         }
+        PrintAll();
     }
     void SecondStep(){
         std::cout << "Шаг 2\n";
@@ -156,28 +165,50 @@ class Solution{
         //идём до q
         for (auto i = n - 2; i > k + 2; --i){
             SubLineEffDownToUp(i);
-            SubLineDirect(i + 1, i, -matrix2[i][n - i - 2]);
+            SubLineDirect(i + 1, i, -matrix2[i][ReverseIndex(i+1)]);
             //зануляем i столбец в p
             if (i != k + 2){
                 //нормируем строку
                 NormalizeLineEffDownToUp(i);
-                NormalizeLineDirect(i, matrix2[i][n - i - 1]);
-                SubLineEffDownToP(i);
-                SubLineDirect(i + 1, k, -matrix2[k][n - i - 2]);
+                NormalizeLineDirect(i, matrix2[i][ReverseIndex(i)]);
+                SubLineEffDownToP(i + 1);
+                SubLineDirect(i + 1, k, -matrix2[k][ReverseIndex(i + 1)]);
                 //зануляем i столбец в q
-                SubLineEffDownToQ(i);
-                SubLineDirect(i + 1, k + 2, -matrix2[k + 2][n - i - 2]);
+                SubLineEffDownToQ(i + 1);
+                SubLineDirect(i + 1, k + 2, -matrix2[k + 2][ReverseIndex(i + 1)]);
             }
         }
+        PrintAll();
     }
     void ThirstStep(){
         std::cout << "Шаг 3\n";
         std::cout << "==============================\n";
+        SubLineEffDownToP(ReverseIndex(k));
+        SubLineDirect(k+3, k, -matrix2[k][k]);
+        SubLineEffDownToQ(ReverseIndex(k));
+        SubLineDirect(k+3, k+2, -matrix2[k+2][k]);
+
+        SubLineEffUpToP(k - 1);
+        SubLineDirect(k - 1, k, -matrix2[k][ReverseIndex(k - 1)]);
+        SubLineEffUpToQ(k - 1);
+        SubLineDirect(k - 1, k + 2, -matrix2[k + 2][ReverseIndex(k - 1)]);
+
         PrintAll();
-        SubLineEffDownToP(k+3);
-        SubLineDirect(k+3, k, -matrix2[k][k+3]);
-//        SubLineDirect(k+3, k+2, -matrix2[k+2][k+3]);
-//        SubLineEffDownToQ(k+3);
+    }
+    static void NormalizeLineCore(vector_RefRational2d& matrix3of3, vector_RefRational& f3, int index){
+        int reverse_index = ReverseIndex(index, 3);
+        for (int i = reverse_index; i >= 0; i--){
+            *matrix3of3[index][i] /= *matrix3of3[index][reverse_index];
+        }
+        *f3[index] /= *matrix3of3[index][reverse_index];
+        *matrix3of3[index][reverse_index] = 1;
+    }
+    static void SubLineCore(vector_RefRational2d& matrix3of3, vector_RefRational& f3, int from, int to){
+        int reverse_index = ReverseIndex(from, 3);
+        for (int j = reverse_index - 1; j >= 0; j--){
+            *matrix3of3[from][j] -= *matrix3of3[to][reverse_index] * *matrix3of3[from][j];
+        }
+        matrix3of3[from][reverse_index] = 0;
     }
     void FourthStep(){
         std::cout << "Шаг 4\n";
@@ -192,7 +223,14 @@ class Solution{
                 &f[k+1],
                 &f[k+2]
         };
-        *matrix3of3[0][1] /= *matrix3of3[0][0]; *matrix3of3[0][2] /= *matrix3of3[0][0]; *f3[0] /= *matrix3of3[0][0]; *matrix3of3[0][0] = 1;
+        for (int i = 0; i < 3; i++){
+            NormalizeLineCore(matrix3of3, f3, i);
+            NormalizeLineDirect(k + i, matrix2[k + i][ReverseIndex(k+i)]);
+            for (int j = i + 1; j < 3; j++){
+                SubLineCore(matrix3of3, f3, i, j);
+                SubLineDirect(k + i, k + j, matrix2[k+j][k + i]);
+            }
+        }
     }
 public:
     Solution(vector_Rational2d &matrix, vector_Rational &f, size_t k) : matrix(matrix), f(f), k(k) {
