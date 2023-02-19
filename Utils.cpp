@@ -2,17 +2,10 @@
 #include <fstream>
 #include <sstream>
 
-int findK(vector_Rational2d &matrix) {
-    auto n = matrix.size();
-    if (n < 4) return -1;
-    size_t i = 1;
-    while (i < n - 3){
-        if (matrix[i][0] != 0 && matrix[i + 2][0]){
-            return i;
-        }
-        ++i;
-    }
-    return -1;
+int findK(std::ifstream &file) {
+    std::string temp;
+    std::getline(file, temp);
+    return std::stoi(temp);
 }
 
 void BadMatrix() {
@@ -26,9 +19,13 @@ void BadLine(size_t index) {
     throw std::invalid_argument(error);
 }
 
-std::pair<vector_Rational2d, std::vector<Rational>> ReadFromFile() {
+std::tuple<vector_Rational2d, std::vector<Rational>, int> ReadFromFile() {
     std::ifstream in("in.txt");
     in.imbue(std::locale("en_US.UTF-8"));
+    int k = findK(in);
+    if (k == -1) {
+        BadMatrix();
+    }
     vector_Rational2d matrix;
     std::vector<Rational> f;
     bool end_matrix = false;
@@ -43,7 +40,9 @@ std::pair<vector_Rational2d, std::vector<Rational>> ReadFromFile() {
             while (!ss.eof()){
                 int64_t temp;
                 ss >> temp;
-                cur_line.emplace_back(temp);
+                if (!ss.fail()) {
+                    cur_line.emplace_back(temp);
+                }
             }
             if (n == -1){
                 n = cur_line.size();
@@ -63,5 +62,5 @@ std::pair<vector_Rational2d, std::vector<Rational>> ReadFromFile() {
     if (matrix.size() != f.size()) {
         throw std::invalid_argument( "Нет столбца свободных членов");
     }
-    return std::make_pair(std::move(matrix), std::move(f));
+    return std::make_tuple(std::move(matrix), std::move(f), k);
 }

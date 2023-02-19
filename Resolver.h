@@ -2,7 +2,8 @@
 #include <vector>
 #include <boost/rational.hpp>
 
-using Rational = boost::rational<std::int64_t>;
+//using Rational = boost::rational<std::int64_t>;
+using Rational = double;
 using vector_Rational = std::vector<Rational>;
 using vector_Rational2d = std::vector<std::vector<Rational>>;
 using vector_RefRational = std::vector<Rational*>;
@@ -28,7 +29,7 @@ class Resolver{
     void Check();
     size_t ReverseIndex(size_t i);
     static size_t ReverseIndex(size_t i, size_t n);
-    void SubLineDirect(size_t from, size_t to, Rational k);
+    void AddLineDirect(size_t from, size_t to, Rational k);
     void SubLineEffUpToDown(size_t i);
     void SubLineEffUpToP(size_t index);
     void SubLineEffUpToQ(size_t index);
@@ -49,4 +50,5 @@ class Resolver{
 public:
     Resolver(vector_Rational2d &matrix, vector_Rational &f, size_t k);
     void Solve();
+    vector_Rational GetSolution();
 };

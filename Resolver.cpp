@@ -20,9 +20,9 @@ bool Resolver::HaveMissmatches() {
 }
 
 void Resolver::PrintAll() {
-    std::cout << "First matrix\n";
+    std::cout << "Matrix\n";
     Print(matrix, f);
-    std::cout << "Second matrix\n";
+    std::cout << "Matrix solved by Gauss\n";
     Print(matrix2, f2);
     std::cout << "==============================\n";
 }
@@ -39,7 +39,7 @@ size_t Resolver::ReverseIndex(size_t i, size_t n) {
     return n - 1 - i;
 }
 
-void Resolver::SubLineDirect(size_t from, size_t to, Rational k) {
+void Resolver::AddLineDirect(size_t from, size_t to, Rational k) {
     for (int i = 0; i < matrix2.size(); ++i){
         matrix2[to][i] += k * matrix2[from][i];
     }
@@ -112,16 +112,16 @@ void Resolver::FirstStep() {
     for (auto i = 1; i < k; ++i){
         //зануляем i столбец в строке под текущей
         SubLineEffUpToDown(i);
-        SubLineDirect(i - 1, i, -matrix2[i][n - i]);
+        AddLineDirect(i - 1, i, -matrix2[i][n - i]);
         //нормируем строку
         NormalizeLineEffUpToDown(i);
         NormalizeLineDirect(i, matrix2[i][n - i - 1]);
         //зануляем i столбец в p
         SubLineEffUpToP(i - 1);
-        SubLineDirect(i - 1, k, -matrix2[k][n - i]);
+        AddLineDirect(i - 1, k, -matrix2[k][n - i]);
         //зануляем i столбец в q
         SubLineEffUpToQ(i - 1);
-        SubLineDirect(i - 1, k + 2, -matrix2[k + 2][n - i]);
+        AddLineDirect(i - 1, k + 2, -matrix2[k + 2][n - i]);
     }
     PrintAll();
 }
@@ -134,17 +134,17 @@ void Resolver::SecondStep() {
     //идём до q
     for (auto i = n - 2; i > k + 2; --i){
         SubLineEffDownToUp(i);
-        SubLineDirect(i + 1, i, -matrix2[i][ReverseIndex(i+1)]);
+        AddLineDirect(i + 1, i, -matrix2[i][ReverseIndex(i + 1)]);
         //зануляем i столбец в p
         if (i != k + 2){
             //нормируем строку
             NormalizeLineEffDownToUp(i);
             NormalizeLineDirect(i, matrix2[i][ReverseIndex(i)]);
             SubLineEffDownToP(i + 1);
-            SubLineDirect(i + 1, k, -matrix2[k][ReverseIndex(i + 1)]);
+            AddLineDirect(i + 1, k, -matrix2[k][ReverseIndex(i + 1)]);
             //зануляем i столбец в q
             SubLineEffDownToQ(i + 1);
-            SubLineDirect(i + 1, k + 2, -matrix2[k + 2][ReverseIndex(i + 1)]);
+            AddLineDirect(i + 1, k + 2, -matrix2[k + 2][ReverseIndex(i + 1)]);
         }
     }
     PrintAll();
@@ -153,17 +153,14 @@ void Resolver::SecondStep() {
 void Resolver::ThirstStep() {
     std::cout << "Шаг 3\n";
     std::cout << "==============================\n";
-    SubLineEffDownToP(ReverseIndex(k));
-    SubLineDirect(k+3, k, -matrix2[k][k]);
-    SubLineEffDownToQ(ReverseIndex(k));
-    SubLineDirect(k+3, k+2, -matrix2[k+2][k]);
-
+    SubLineEffDownToP(k + 3);
+    AddLineDirect(k + 3, k, -matrix2[k][ReverseIndex(k) - 3]);
+    SubLineEffDownToQ(k + 3);
+    AddLineDirect(k + 3, k + 2, -matrix2[k + 2][ReverseIndex(k) - 3]);
     SubLineEffUpToP(k - 1);
-    SubLineDirect(k - 1, k, -matrix2[k][ReverseIndex(k - 1)]);
+    AddLineDirect(k - 1, k, -matrix2[k][ReverseIndex(k - 1)]);
     SubLineEffUpToQ(k - 1);
-    SubLineDirect(k - 1, k + 2, -matrix2[k + 2][ReverseIndex(k - 1)]);
-
-    PrintAll();
+    AddLineDirect(k - 1, k + 2, -matrix2[k + 2][ReverseIndex(k - 1)]);
 }
 
 void Resolver::NormalizeLineCore(vector_RefRational2d &matrix3of3, vector_RefRational &f3, int index) {
@@ -207,13 +204,13 @@ void Resolver::FourthStep() {
         NormalizeLineDirect(k + i, matrix2[k + i][ReverseIndex(k+i)]);
         for (int j = i + 1; j < 3; j++){
             SubLineCoreRight(matrix3of3, f3, i, j);
-            SubLineDirect(k + i, k + j, -matrix2[k+j][ReverseIndex(k + i)]);
+            AddLineDirect(k + i, k + j, -matrix2[k + j][ReverseIndex(k + i)]);
         }
     }
     for (int i = 2; i >= 1; i--){
         for (int j = i - 1; j >= 0; j--){
             SubLineCoreLeft(matrix3of3, f3, i, j);
-            SubLineDirect(k+i, k+j,-matrix2[k+j][ReverseIndex(k+i)]);
+            AddLineDirect(k + i, k + j, -matrix2[k + j][ReverseIndex(k + i)]);
         }
     }
     PrintAll();
@@ -249,16 +246,17 @@ void Resolver::FiveStep() {
     std::cout << "==============================\n";
     for (auto i = k + 3; i < n; ++i){
         SubLineEffUpToDown(i);
-        SubLineDirect(i - 1, i, -matrix2[i][ReverseIndex(i - 1)]);
+        AddLineDirect(i - 1, i, -matrix2[i][ReverseIndex(i - 1)]);
     }
     for (int i = k - 1; i>= 0; --i){
         SubLineEffDownToUp(i);
-        SubLineDirect(i + 1, i, -matrix2[i][ReverseIndex(i + 1)]);
+        AddLineDirect(i + 1, i, -matrix2[i][ReverseIndex(i + 1)]);
     }
     PrintAll();
 }
 
 void Resolver::Solve() {
+    PrintAll();
     FirstStep();
     SecondStep();
     ThirstStep();
@@ -266,16 +264,28 @@ void Resolver::Solve() {
     FiveStep();
 }
 
+vector_Rational Resolver::GetSolution() {
+    auto copy = f;
+    std::reverse(copy.begin(), copy.end());
+    return copy;
+}
+template<typename Number>
+void Print(Number rational){
+    if (rational.denominator() == 1) std::cout << rational.numerator() << ' ';
+    else std::cout << rational << ' ';
+}
+void Print(double rational){
+    std::cout << rational << ' ';
+}
+
 void Print(vector_Rational2d &matrix, std::vector<Rational> &f) {
     auto it = f.begin();
     for (auto& line : matrix){
         for (auto row: line) {
-            if (row.denominator() == 1) std::cout << row.numerator() << ' ';
-            else std::cout << row << ' ';
+            Print(row);
         }
         std::cout << '|';
-        if (it->denominator() == 1) std::cout << it->numerator();
-        else std::cout << *it;
+        Print(*it);
         std::cout << '\n';
         ++it;
     }

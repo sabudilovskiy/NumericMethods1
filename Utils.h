@@ -4,5 +4,5 @@
 
 void BadLine(size_t index);
 void BadMatrix();
-int findK(vector_Rational2d& matrix);
-std::pair<vector_Rational2d, std::vector<Rational>>  ReadFromFile();
+int findK(std::ifstream& file);
+std::tuple<vector_Rational2d, std::vector<Rational>, int>  ReadFromFile();
