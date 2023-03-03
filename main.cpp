@@ -57,6 +57,22 @@ void PrintSolution(Solution&& solution){
     std::cout << '\n';
 }
 
+template<typename ExpectedSolution, typename GetSolution>
+void CompareSolutions(ExpectedSolution&& expected_solution, GetSolution&& get_solution){
+    size_t N = expected_solution.size();
+    std::vector<double> arr;
+    arr.resize(N);
+    for (size_t i = 0; i < N; i++){
+        arr[i] = std::abs(expected_solution[i] - get_solution[i]);
+    }
+    std::cout << "dif: \n";
+    for (auto& x : arr){
+        std::cout << x << '\n';
+    }
+    auto max = std::max_element(arr.begin(),  arr.end());
+    std::cout << "error: " << *max << '\n';
+}
+
 int main() {
     SetConsoleCP(65001);
     SetConsoleOutputCP(65001);
@@ -97,12 +113,13 @@ int main() {
             auto [matrix, f, kReaded] = ReadFromFile();
             Resolver resolver(matrix, f, kReaded);
             resolver.Solve();
+            PrintGeneratedSolution(generator.GetSolution());
             PrintSolution(resolver.GetSolution());
+            CompareSolutions(generator.GetSolution(), resolver.GetSolution());
         }
         catch (std::exception& exc){
             std::cout << exc.what();
         }
-        PrintGeneratedSolution(std::get<2>(generator.GetResult()));
         std::cin.get();
     }
     return 0;

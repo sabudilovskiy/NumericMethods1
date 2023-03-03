@@ -45,6 +45,9 @@ public:
     auto GetResult() const {
         return std::tie(matrix_, free_members_column_, solution_);
     }
+    auto GetSolution() const {
+        return solution_;
+    }
 
 protected:
     Number GenerateNumber(){
